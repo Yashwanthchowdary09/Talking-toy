@@ -1,0 +1,86 @@
+import speech_recognition as sr
+from gtts import gTTS
+import os
+from playsound import playsound
+
+# Speech Recognition with Limited Listening and Stop Keyword
+def recognize_speech():
+    """
+    Captures user speech with limited duration and stop keyword detection.
+
+    Returns:
+        str: Recognized speech as text, or None if timed out or stopped.
+    """
+
+    r = sr.Recognizer()
+    stop_listening = "stop"  # Keyword to stop listening
+    listening_time = 10  # Adjust this value for desired listening duration (seconds)
+
+    with sr.Microphone() as source:
+        print(f"Please say the numbers to sort (separated by space), or say '{stop_listening}' to stop:")
+        try:
+            audio = r.listen(source, timeout=listening_time)  # Set timeout for limited duration
+        except sr.WaitTimeoutError:  # Handle timeout exception
+            print("Listening timed out.")
+            return None
+
+        recognized_speech = r.recognize_google(audio, language='en-US')
+        if recognized_speech.lower() == stop_listening:  # Check for stop keyword (lowercase)
+            return None
+        else:
+            return recognized_speech
+
+# Bubble Sort Algorithm
+def bubble_sort(arr):
+    """
+    Sorts a list of numbers using the bubble sort algorithm.
+
+    Args:
+        arr: A list of integers.
+
+    Returns:
+        list: The sorted list of integers.
+    """
+
+    n = len(arr)
+    swapped = False
+    for i in range(n - 1):
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            # Optimization: break early if no swaps occur in a pass
+            break
+    return arr
+
+# Main Program
+def main():
+    """
+    Combines speech recognition, bubble sort, and audio output functionalities.
+    """
+
+    voice_input = recognize_speech()
+    if voice_input is None:  # Check for timeout or stop keyword
+        print("No input received.")
+    elif voice_input.lower() == "stop":  # Check for stop keyword explicitly
+        print("Sorting cancelled.")
+    else:
+        try:
+            numbers = [int(x) for x in voice_input.split()]  # Convert only if valid input
+        except ValueError:
+            print("Invalid input. Please enter numbers separated by spaces.")
+        else:
+            sorted_numbers = bubble_sort(numbers)
+            print("Sorted numbers are:", sorted_numbers)
+
+            # Generate speech output
+            text_to_speak = "Sorted numbers are: " + ', '.join(map(str, sorted_numbers))
+            voice_output = gTTS(text_to_speak)
+            voice_output.save("output.mp3")
+
+            # Play the audio using playsound
+            playsound("output.mp3")
+
+if __name__ == "__main__":
+    main()
